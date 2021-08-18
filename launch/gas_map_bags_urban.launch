@@ -1,0 +1,32 @@
+<launch>
+
+  <!--
+  Load the setup for the bags
+
+  rosbag play spot2_globalplan_2020-02-26-12-51-20_0.bag spot2_artifact_2020-02-26-12-51-19_0.bag spot2_localplan_2020-02-26-12-51-20_0.bag spot2_artifact_2020-02-26-13-36-30_1.bag   spot2_tf_2020-02-26-12-51-20_0.bag base1_lamp_2020-02-26-13-55-29_102.bag lamp_posegraph.bag lamp_posegraph_incremental.bag -r 20 -s 1450
+  -->
+
+  <!-- set tf -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 world base_link" />
+  
+  <!-- publish GT markers for reference -->
+  <node pkg="gas_mapping_kerneldm" type="publish_gt_markers.py" name="publish_gt_markers" output="screen">
+
+    <param name="file_path" value="$(find gas_mapping_kerneldm)/data/gt_beta2.json" />
+    <param name="frame_id" value="/world" />
+  </node>
+
+  <!-- load pointcloud -->
+  <node pkg="pcl_ros" type="pcd_to_pointcloud" name="pcd_to_pointcloud_beta" args ="$(find gas_mapping_kerneldm)/data/urban_beta_both_floors_simplified.pcd 0.1" output="screen">
+
+    <param name="frame_id" value="/world" />
+  </node>
+
+  <!-- density map -->
+  <node pkg="gas_mapping_kerneldm" type="main_density_map_node.py" name="density_map_node" output="screen">
+  </node>
+
+  <!-- Visualize the point cloud/co2 in rviz -->
+  <node name="rviz_co2" pkg="rviz" type="rviz" args="-d $(find gas_mapping_kerneldm)/rviz/co2_layout.rviz" />
+    
+</launch>
