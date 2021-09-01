@@ -83,8 +83,8 @@ class Gas_Estimation_Map():
                 rospy.logwarn("[GMRF] cannot find transformation between gas sensor and map frame_id")
                 return
 
-            self.x_reads.append(int((trans[0])+ (self.origin.x)))
-            self.y_reads.append(int((trans[1])+ (self.origin.y)))
+            self.x_reads.append(((trans[0]))) #+ (self.origin.x)))
+            self.y_reads.append(((trans[1]))) #+ (self.origin.y)))
 
             self.concentration.append(msg.raw)
 
@@ -113,7 +113,8 @@ class Gas_Estimation_Map():
     def update_map(self,pub_name):
 
         self.i=-1
-        max_v = np.max(self.kernel.mean_map)
+        max_mean = np.max(self.kernel.mean_map)
+        max_confidence = np.max(self.kernel.confidence_map)
 
         with self.marker_array_lock:
             self.markerArray = MarkerArray()
@@ -131,8 +132,8 @@ class Gas_Estimation_Map():
                             self.marker.type = self.marker.CUBE
                             self.marker.action = self.marker.MODIFY
 
-                            self.marker.pose.position.x = (self.origin.x*self.cell_size) + (self.kernel.cell_grid_x[x,y] )# + 2.2
-                            self.marker.pose.position.y = (self.origin.y*self.cell_size) + (self.kernel.cell_grid_y[x,y] )#+ 2.4
+                            self.marker.pose.position.x = (self.origin.x*self.cell_size) + (self.kernel.cell_grid_x[x,y] ) + 1.2
+                            self.marker.pose.position.y = (self.origin.y*self.cell_size) + (self.kernel.cell_grid_y[x,y] )+ 1.2
                             self.marker.pose.orientation.w = 1
                             self.marker.lifetime = rospy.Duration()
                             self.marker.scale.x = self.cell_size
@@ -141,13 +142,13 @@ class Gas_Estimation_Map():
                             self.marker.color.a = 0.5
                             
                             if (pub_name == 'mean_array'):
-                                self.marker.color.r = (1.0 * self.kernel.mean_map[x][y]) / max_v
-                                self.marker.color.g = 0.8 * (1 - 2.0 * abs(self.kernel.mean_map[x][y] - max_v / 2) / max_v)
-                                self.marker.color.b = 1 - (1.0 * self.kernel.mean_map[x][y] / max_v)
+                                self.marker.color.r = (1.0 * self.kernel.mean_map[x][y]) / max_mean
+                                self.marker.color.g = 0.8 * (1 - 2.0 * abs(self.kernel.mean_map[x][y] - max_mean / 2) / max_mean)
+                                self.marker.color.b = 1 - (1.0 * self.kernel.mean_map[x][y] / max_mean)
                             elif (pub_name == 'confidence_array'):
-                                self.marker.color.r = (1.0 * self.kernel.confidence_map[x][y]) / max_v
-                                self.marker.color.g = 0.8 * (1 - 2.0 * abs(self.kernel.confidence_map[x][y] - max_v / 2) / max_v)
-                                self.marker.color.b = 1 - (1.0 * self.kernel.confidence_map[x][y] / max_v)
+                                self.marker.color.r = (1.0 * self.kernel.confidence_map[x][y]) / max_confidence
+                                self.marker.color.g = 0.8 * (1 - 2.0 * abs(self.kernel.confidence_map[x][y] - max_confidence / 2) / max_confidence)
+                                self.marker.color.b = 1 - (1.0 * self.kernel.confidence_map[x][y] / max_confidence)
                             elif (pub_name == 'empty_map'):
                                 self.marker.color.r = 0.0
                                 self.marker.color.g = 0.0
